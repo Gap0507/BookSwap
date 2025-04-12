@@ -58,7 +58,10 @@ const getBookById = async (req, res) => {
 // @access  Private
 const createBook = async (req, res) => {
   try {
-    const { title, author, genre, location, description, cover } = req.body;
+    const { title, author, genre, location, description } = req.body;
+    
+    // Get the file path if a file was uploaded
+    const cover = req.file ? `/uploads/${req.file.filename}` : '';
     
     const book = await Book.create({
       title,
@@ -91,6 +94,11 @@ const updateBook = async (req, res) => {
     // Check if user is the book owner
     if (book.ownerId.toString() !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized to update this book' });
+    }
+    
+    // Process file if uploaded
+    if (req.file) {
+      req.body.cover = `/uploads/${req.file.filename}`;
     }
     
     // Update fields

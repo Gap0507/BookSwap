@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useBooks } from '../context/BookContext';
 
+// API base URL for resolving image paths
+const API_URL = 'http://localhost:5000';
+
 const BookCard = ({ book }) => {
   // Support both MongoDB _id and local storage id
   const bookId = book._id || book.id;
@@ -18,6 +21,19 @@ const BookCard = ({ book }) => {
     (book.ownerId === currentUser.id || 
      (book.ownerId && book.ownerId._id === currentUser.id) ||
      (book.ownerId && typeof book.ownerId === 'string' && book.ownerId === currentUser.id));
+
+  // Function to resolve image path
+  const getImageUrl = (coverPath) => {
+    if (!coverPath) return "https://source.unsplash.com/random/400x600/?book";
+    
+    // If it's a full URL or data URL, use it directly
+    if (coverPath.startsWith('http') || coverPath.startsWith('data:')) {
+      return coverPath;
+    }
+    
+    // Otherwise, it's a relative path from the server
+    return `${API_URL}${coverPath}`;
+  };
 
   const handleStatusToggle = async () => {
     setIsUpdating(true);
@@ -63,7 +79,7 @@ const BookCard = ({ book }) => {
     <div className="glass-card overflow-hidden animate-fadeIn card-hover">
       <div className="relative">
         <img 
-          src={cover || "https://source.unsplash.com/random/400x600/?book"} 
+          src={getImageUrl(cover)} 
           alt={title}
           className="w-full h-64 object-cover"
         />

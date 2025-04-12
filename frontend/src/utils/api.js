@@ -33,6 +33,36 @@ export const apiRequest = async (endpoint, options = {}) => {
   }
 };
 
+// Helper for file uploads
+export const apiFileUpload = async (endpoint, formData, method = 'POST') => {
+  // Get token from localStorage if available
+  const token = localStorage.getItem('token');
+  
+  // For file uploads, don't set Content-Type as it will be set by the browser with boundary
+  const headers = {
+    ...(token && { Authorization: `Bearer ${token}` }),
+  };
+
+  try {
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      method,
+      headers,
+      body: formData
+    });
+    
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Something went wrong');
+    }
+
+    return data;
+  } catch (error) {
+    console.error(`API Error: ${error.message}`);
+    throw error;
+  }
+};
+
 // Auth API endpoints
 export const authAPI = {
   register: (userData) => 
@@ -70,17 +100,59 @@ export const booksAPI = {
   getBookById: (id) => 
     apiRequest(`/books/${id}`),
   
-  createBook: (bookData) => 
-    apiRequest('/books', {
+  createBook: (bookData) => {
+    // If there's a file to upload, use FormData
+    if (bookData.coverFile) {
+      const formData = new FormData();
+      
+      // Add book data fields to formData
+      for (const key in bookData) {
+        if (key !== 'coverFile' && key !== 'cover') {
+          formData.append(key, bookData[key]);
+        }
+      }
+      
+      // Add the file
+      if (bookData.coverFile) {
+        formData.append('cover', bookData.coverFile);
+      }
+      
+      return apiFileUpload('/books', formData);
+    }
+    
+    // If no file, use standard JSON request
+    return apiRequest('/books', {
       method: 'POST',
       body: JSON.stringify(bookData)
-    }),
+    });
+  },
   
-  updateBook: (id, bookData) => 
-    apiRequest(`/books/${id}`, {
+  updateBook: (id, bookData) => {
+    // If there's a file to upload, use FormData
+    if (bookData.coverFile) {
+      const formData = new FormData();
+      
+      // Add book data fields to formData
+      for (const key in bookData) {
+        if (key !== 'coverFile' && key !== 'cover') {
+          formData.append(key, bookData[key]);
+        }
+      }
+      
+      // Add the file
+      if (bookData.coverFile) {
+        formData.append('cover', bookData.coverFile);
+      }
+      
+      return apiFileUpload(`/books/${id}`, formData, 'PUT');
+    }
+    
+    // If no file, use standard JSON request
+    return apiRequest(`/books/${id}`, {
       method: 'PUT',
       body: JSON.stringify(bookData)
-    }),
+    });
+  },
   
   deleteBook: (id) => 
     apiRequest(`/books/${id}`, {

@@ -3,6 +3,9 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useBooks } from '../context/BookContext';
 import { useAuth } from '../context/AuthContext';
 
+// API base URL for resolving image paths
+const API_URL = 'http://localhost:5000';
+
 const BookDetailPage = () => {
   const { id } = useParams();
   const { getBookById, updateBookStatus, deleteBook } = useBooks();
@@ -12,6 +15,19 @@ const BookDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+
+  // Function to resolve image path
+  const getImageUrl = (coverPath) => {
+    if (!coverPath) return "https://source.unsplash.com/random/400x600/?book";
+    
+    // If it's a full URL or data URL, use it directly
+    if (coverPath.startsWith('http') || coverPath.startsWith('data:')) {
+      return coverPath;
+    }
+    
+    // Otherwise, it's a relative path from the server
+    return `${API_URL}${coverPath}`;
+  };
 
   useEffect(() => {
     const fetchBook = async () => {
@@ -127,7 +143,7 @@ const BookDetailPage = () => {
         <div className="flex flex-col md:flex-row">
           <div className="md:w-1/3 h-[400px] md:h-auto">
             <img 
-              src={book.cover || "https://source.unsplash.com/random/400x600/?book"} 
+              src={getImageUrl(book.cover)}
               alt={book.title}
               className="w-full h-full object-cover"
             />

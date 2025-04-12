@@ -52,12 +52,15 @@ const DashboardPage = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Generate preview URL for display
       const reader = new FileReader();
       reader.onload = (e) => {
         setPreviewUrl(e.target.result);
-        setNewBook(prev => ({ ...prev, cover: e.target.result }));
       };
       reader.readAsDataURL(file);
+      
+      // Store the actual file for upload instead of base64 string
+      setNewBook(prev => ({ ...prev, coverFile: file }));
     }
   };
 
