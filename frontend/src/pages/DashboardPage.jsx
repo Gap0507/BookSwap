@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useBooks } from '../context/BookContext';
@@ -9,6 +8,8 @@ const DashboardPage = () => {
   const { currentUser, isOwner, isAuthenticated } = useAuth();
   const { books, addBook, getBooksByOwner } = useBooks();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [userBooks, setUserBooks] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [newBook, setNewBook] = useState({
     title: '',
     author: '',
@@ -20,11 +21,28 @@ const DashboardPage = () => {
   const [previewUrl, setPreviewUrl] = useState('');
   const [error, setError] = useState('');
 
+  // Fetch user's books when component mounts
+  useEffect(() => {
+    const fetchUserBooks = async () => {
+      if (isOwner && currentUser) {
+        setLoading(true);
+        try {
+          const books = await getBooksByOwner(currentUser.id);
+          setUserBooks(books || []);
+        } catch (err) {
+          console.error('Error fetching user books:', err);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchUserBooks();
+  }, [isOwner, currentUser, getBooksByOwner]);
+
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: { pathname: '/dashboard' } }} />;
   }
-
-  const userBooks = isOwner ? getBooksByOwner(currentUser.id) : [];
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -43,7 +61,7 @@ const DashboardPage = () => {
     }
   };
 
-  const handleAddBook = (e) => {
+  const handleAddBook = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -52,22 +70,30 @@ const DashboardPage = () => {
       return;
     }
 
-    addBook({
-      ...newBook,
-      ownerId: currentUser.id
-    });
+    try {
+      const addedBook = await addBook({
+        ...newBook,
+        ownerId: currentUser.id
+      });
 
-    // Reset form
-    setNewBook({
-      title: '',
-      author: '',
-      genre: '',
-      location: '',
-      description: '',
-      cover: ''
-    });
-    setPreviewUrl('');
-    setShowAddForm(false);
+      // Update user books list with the new book
+      setUserBooks(prev => [...prev, addedBook]);
+
+      // Reset form
+      setNewBook({
+        title: '',
+        author: '',
+        genre: '',
+        location: '',
+        description: '',
+        cover: ''
+      });
+      setPreviewUrl('');
+      setShowAddForm(false);
+    } catch (err) {
+      setError('Failed to add book. Please try again.');
+      console.error('Error adding book:', err);
+    }
   };
 
   return (
@@ -255,7 +281,17 @@ const DashboardPage = () => {
         <>
           <h2 className="text-2xl font-serif font-bold mb-6">Your Books</h2>
           
-          {userBooks.length === 0 ? (
+          {loading ? (
+            <div className="glass-card p-12 text-center">
+              <div className="animate-spin w-12 h-12 mx-auto text-primary-600 dark:text-primary-400 mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+              <p>Loading your books...</p>
+            </div>
+          ) : userBooks.length === 0 ? (
             <div className="glass-card p-12 text-center">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 mx-auto text-gray-400 mb-4">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />

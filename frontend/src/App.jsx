@@ -1,10 +1,7 @@
-
 import { Routes, Route } from 'react-router-dom';
-import { useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { BookProvider } from './context/BookContext';
 import { ThemeProvider } from './context/ThemeContext';
-import { initializeLocalStorage } from './utils/localStorage';
 import Layout from './components/Layout';
 import PrivateRoute from './components/PrivateRoute';
 import HomePage from './pages/HomePage';
@@ -16,11 +13,6 @@ import DashboardPage from './pages/DashboardPage';
 import NotFound from './pages/NotFound';
 
 function App() {
-  useEffect(() => {
-    // Initialize local storage with sample data
-    initializeLocalStorage();
-  }, []);
-
   return (
     <ThemeProvider>
       <AuthProvider>

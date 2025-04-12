@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useBooks } from '../context/BookContext';
 import { useAuth } from '../context/AuthContext';
-import { getFromLocalStorage } from '../utils/localStorage';
 
 const BookDetailPage = () => {
   const { id } = useParams();
@@ -26,11 +25,11 @@ const BookDetailPage = () => {
           // Owner info might be included in the book object from the API
           if (foundBook.ownerId && typeof foundBook.ownerId === 'object') {
             setOwner(foundBook.ownerId);
+          } else if (foundBook.owner) {
+            // Some APIs might return owner as a separate field
+            setOwner(foundBook.owner);
           } else {
-            // Otherwise get owner information from localStorage
-            const users = getFromLocalStorage('users', []);
-            const bookOwner = users.find(user => user.id === foundBook.ownerId);
-            setOwner(bookOwner || null);
+            setOwner(null);
           }
           
           setError(null);
