@@ -1,9 +1,9 @@
-
 import { createContext, useContext, useState, useEffect } from 'react';
 import { getFromLocalStorage, saveToLocalStorage } from '../utils/localStorage';
 
 const BookContext = createContext();
 
+// Export the context provider component first
 export const BookProvider = ({ children }) => {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -69,6 +69,7 @@ export const BookProvider = ({ children }) => {
   );
 };
 
+// Export the hook after the component
 export const useBooks = () => {
   return useContext(BookContext);
 };

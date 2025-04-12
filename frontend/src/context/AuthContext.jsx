@@ -1,9 +1,9 @@
-
 import { createContext, useContext, useState, useEffect } from 'react';
 import { getFromLocalStorage, saveToLocalStorage } from '../utils/localStorage';
 
 const AuthContext = createContext();
 
+// Export the context provider component first
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -75,6 +75,7 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
+// Export the hook after the component
 export const useAuth = () => {
   return useContext(AuthContext);
 };
