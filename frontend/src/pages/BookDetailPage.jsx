@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useBooks } from '../context/BookContext';
@@ -11,37 +10,87 @@ const BookDetailPage = () => {
   const { currentUser, isOwner } = useAuth();
   const [book, setBook] = useState(null);
   const [owner, setOwner] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const foundBook = getBookById(id);
+    const fetchBook = async () => {
+      setLoading(true);
+      try {
+        const foundBook = await getBookById(id);
+        
+        if (foundBook) {
+          setBook(foundBook);
+          
+          // Owner info might be included in the book object from the API
+          if (foundBook.ownerId && typeof foundBook.ownerId === 'object') {
+            setOwner(foundBook.ownerId);
+          } else {
+            // Otherwise get owner information from localStorage
+            const users = getFromLocalStorage('users', []);
+            const bookOwner = users.find(user => user.id === foundBook.ownerId);
+            setOwner(bookOwner || null);
+          }
+          
+          setError(null);
+        } else {
+          setError('Book not found');
+        }
+      } catch (err) {
+        console.error('Error fetching book:', err);
+        setError(err.message || 'Failed to load book');
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    if (foundBook) {
-      setBook(foundBook);
-      
-      // Get owner information
-      const users = getFromLocalStorage('users', []);
-      const bookOwner = users.find(user => user.id === foundBook.ownerId);
-      setOwner(bookOwner || null);
-    }
+    fetchBook();
   }, [id, getBookById]);
 
-  const handleStatusToggle = () => {
+  const handleStatusToggle = async () => {
     if (!book) return;
     
-    const newStatus = book.status === 'available' ? 'rented' : 'available';
-    updateBookStatus(id, newStatus);
-    setBook({ ...book, status: newStatus });
-  };
-
-  const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this book?')) {
-      deleteBook(id);
-      navigate('/books');
+    try {
+      const newStatus = book.status === 'available' ? 'rented' : 'available';
+      await updateBookStatus(id, newStatus);
+      setBook({ ...book, status: newStatus });
+    } catch (err) {
+      console.error('Error updating status:', err);
+      alert('Failed to update book status');
     }
   };
 
-  if (!book) {
+  const handleDelete = async () => {
+    if (window.confirm('Are you sure you want to delete this book?')) {
+      try {
+        await deleteBook(id);
+        navigate('/books');
+      } catch (err) {
+        console.error('Error deleting book:', err);
+        alert('Failed to delete book');
+      }
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+        <div className="glass-card p-8 max-w-lg mx-auto">
+          <div className="animate-spin w-12 h-12 mx-auto text-primary-600 dark:text-primary-400 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold mb-4">Loading Book Details</h2>
+          <p className="text-gray-600 dark:text-gray-300">Please wait...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !book) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
         <div className="glass-card p-8 max-w-lg mx-auto">
@@ -50,7 +99,7 @@ const BookDetailPage = () => {
           </svg>
           <h2 className="text-2xl font-bold mb-4">Book Not Found</h2>
           <p className="text-gray-600 dark:text-gray-300 mb-6">
-            The book you're looking for doesn't exist or has been removed.
+            {error || "The book you're looking for doesn't exist or has been removed."}
           </p>
           <Link to="/books" className="btn btn-primary">
             Back to Books
@@ -60,7 +109,9 @@ const BookDetailPage = () => {
     );
   }
 
-  const isUserBook = currentUser && isOwner && book.ownerId === currentUser.id;
+  const isUserBook = currentUser && isOwner && 
+    (book.ownerId === currentUser.id || 
+     (book.ownerId && book.ownerId._id === currentUser.id));
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fadeIn">
