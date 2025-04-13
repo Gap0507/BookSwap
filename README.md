@@ -61,6 +61,10 @@ This peer-to-peer model creates a sustainable book-sharing community where both 
 - **Multer** for file uploads
 - **Bcrypt** for password hashing
 
+
+### AI USED
+AI TOOLS USED: CURSOR
+
 ## Getting Started
 
 ### Prerequisites
@@ -179,9 +183,6 @@ BookSwap/
 - `GET /api/transactions` - Get user transactions
 - `POST /api/transactions` - Create a transaction request
 - `PUT /api/transactions/:id` - Update transaction status
-
-### Transactions
-AI TOOLS USED: CLAUDE
 
 ## License
 
