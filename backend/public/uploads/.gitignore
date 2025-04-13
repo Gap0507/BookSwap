@@ -1,4 +1,10 @@
+# Original settings commented out
 # Ignore all files in this directory
-*
+# *
 # Except this file
-!.gitignore 
+# !.gitignore 
+
+# Allow image files to be committed
+# You can still ignore temporary files if needed
+.DS_Store
+*.tmp 
