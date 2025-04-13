@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useBooks } from '../context/BookContext';
 import { useAuth } from '../context/AuthContext';
+import { useTransaction } from '../context/TransactionContext';
+import { toast } from 'react-hot-toast';
 
 // API base URL for resolving image paths
 const API_URL = 'http://localhost:5000';
@@ -9,12 +11,16 @@ const API_URL = 'http://localhost:5000';
 const BookDetailPage = () => {
   const { id } = useParams();
   const { getBookById, updateBookStatus, deleteBook } = useBooks();
-  const { currentUser, isOwner } = useAuth();
+  const { currentUser, isOwner, isAuthenticated } = useAuth();
+  const { createTransaction } = useTransaction();
   const [book, setBook] = useState(null);
   const [owner, setOwner] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [requestMessage, setRequestMessage] = useState('');
+  const [isRequesting, setIsRequesting] = useState(false);
 
   // Function to resolve image path
   const getImageUrl = (coverPath) => {
@@ -85,6 +91,29 @@ const BookDetailPage = () => {
         console.error('Error deleting book:', err);
         alert('Failed to delete book');
       }
+    }
+  };
+
+  const handleRequestBook = async (e) => {
+    e.preventDefault();
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: `/books/${id}` } });
+      return;
+    }
+
+    setIsRequesting(true);
+    try {
+      await createTransaction({
+        bookId: id,
+        message: requestMessage
+      });
+      setShowRequestModal(false);
+      toast.success('Request sent successfully!');
+    } catch (error) {
+      console.error('Request error:', error);
+      toast.error(error.message || 'Failed to send request');
+    } finally {
+      setIsRequesting(false);
     }
   };
 
@@ -260,9 +289,59 @@ const BookDetailPage = () => {
                 </button>
               </div>
             )}
+
+            {/* Request Button */}
+            {book.status === 'available' && !isUserBook && (
+              <button
+                onClick={() => setShowRequestModal(true)}
+                className="btn btn-primary mt-4"
+              >
+                Request Book
+              </button>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Request Modal */}
+      {showRequestModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="glass-card p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold mb-4">Request Book</h3>
+            <form onSubmit={handleRequestBook}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">
+                  Message to Owner (Optional)
+                </label>
+                <textarea
+                  value={requestMessage}
+                  onChange={(e) => setRequestMessage(e.target.value)}
+                  className="w-full p-2 border rounded-lg bg-white dark:bg-gray-800"
+                  rows="4"
+                  placeholder="Write a message to the book owner..."
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowRequestModal(false)}
+                  className="btn btn-outline"
+                  disabled={isRequesting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isRequesting}
+                  className="btn btn-primary"
+                >
+                  {isRequesting ? 'Sending...' : 'Send Request'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

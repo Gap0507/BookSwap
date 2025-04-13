@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useBooks } from '../context/BookContext';
+import { useTransaction } from '../context/TransactionContext';
 import BookCard from '../components/BookCard';
 
 const DashboardPage = () => {
   const { currentUser, isOwner, isAuthenticated } = useAuth();
   const { books, addBook, getBooksByOwner } = useBooks();
+  const { transactions, fetchMyTransactions, updateTransactionStatus } = useTransaction();
   const [showAddForm, setShowAddForm] = useState(false);
   const [userBooks, setUserBooks] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -23,22 +25,39 @@ const DashboardPage = () => {
 
   // Fetch user's books when component mounts
   useEffect(() => {
-    const fetchUserBooks = async () => {
-      if (isOwner && currentUser) {
-        setLoading(true);
-        try {
-          const books = await getBooksByOwner(currentUser.id);
-          setUserBooks(books || []);
-        } catch (err) {
-          console.error('Error fetching user books:', err);
-        } finally {
+    let isMounted = true;
+
+    const fetchData = async () => {
+      if (!isAuthenticated || !isMounted) return;
+
+      setLoading(true);
+      try {
+        if (isMounted) {
+          await fetchMyTransactions();
+          if (isOwner && currentUser) {
+            const books = await getBooksByOwner(currentUser.id);
+            if (isMounted) {
+              setUserBooks(books || []);
+            }
+          }
+        }
+      } catch (err) {
+        if (isMounted) {
+          console.error('Error fetching data:', err);
+        }
+      } finally {
+        if (isMounted) {
           setLoading(false);
         }
       }
     };
 
-    fetchUserBooks();
-  }, [isOwner, currentUser, getBooksByOwner]);
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAuthenticated, isOwner, currentUser?.id]);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: { pathname: '/dashboard' } }} />;
@@ -98,6 +117,26 @@ const DashboardPage = () => {
       console.error('Error adding book:', err);
     }
   };
+
+  const handleStatusUpdate = async (transactionId, newStatus) => {
+    try {
+      await updateTransactionStatus(transactionId, newStatus);
+    } catch (error) {
+      console.error('Error updating transaction:', error);
+    }
+  };
+
+  // Filter transactions
+  const pendingIncomingRequests = transactions.filter(t => 
+    (typeof t.ownerId === 'object' ? t.ownerId._id : t.ownerId) === currentUser?.id && 
+    t.status === 'requested'
+  );
+
+  const myTransactions = transactions.filter(t => {
+    const isOwner = (typeof t.ownerId === 'object' ? t.ownerId._id : t.ownerId) === currentUser?.id;
+    const isBorrower = (typeof t.borrowerId === 'object' ? t.borrowerId._id : t.borrowerId) === currentUser?.id;
+    return isOwner || isBorrower;
+  });
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fadeIn">
@@ -188,6 +227,9 @@ const DashboardPage = () => {
                   className="input"
                 >
                   <option value="">Select a genre</option>
+                  <option value="Action">Action</option>
+                  <option value="Adventure">Adventure</option>
+                  <option value="Motivational">Motivational</option>
                   <option value="Fiction">Fiction</option>
                   <option value="Fantasy">Fantasy</option>
                   <option value="Dystopian">Dystopian</option>
@@ -316,7 +358,7 @@ const DashboardPage = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {userBooks.map((book) => (
-                <BookCard key={book.id} book={book} />
+                <BookCard key={book._id || book.id} book={book} />
               ))}
             </div>
           )}
@@ -327,7 +369,7 @@ const DashboardPage = () => {
             <h2 className="text-2xl font-serif font-bold mb-6">Available Books</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {books.filter(book => book.status === 'available').slice(0, 3).map((book) => (
-                <BookCard key={book.id} book={book} />
+                <BookCard key={book._id || book.id} book={book} />
               ))}
             </div>
           </div>
@@ -346,6 +388,132 @@ const DashboardPage = () => {
           </div>
         </div>
       )}
+
+      {/* Transactions Section */}
+      <section className="mt-12">
+        <h2 className="text-2xl font-serif font-bold mb-6">Book Requests</h2>
+        
+        {/* Pending Approval Requests - Only shown to owners */}
+        {isOwner && pendingIncomingRequests.length > 0 && (
+          <div className="mb-8">
+            <h3 className="text-xl font-medium mb-4">Pending Approval</h3>
+            <div className="space-y-4">
+              {pendingIncomingRequests.map((transaction) => (
+                <div key={transaction._id} className="glass-card p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">{transaction.bookId.title}</h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        Requested by: {transaction.borrowerId.name}
+                      </p>
+                      {transaction.message && (
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
+                          Message: {transaction.message}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleStatusUpdate(transaction._id, 'approved')}
+                        className="btn btn-sm btn-primary"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => handleStatusUpdate(transaction._id, 'rejected')}
+                        className="btn btn-sm btn-danger"
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* All Transactions */}
+        <div>
+          <h3 className="text-xl font-medium mb-4">All Requests</h3>
+          {myTransactions.length === 0 ? (
+            <div className="glass-card p-6 text-center">
+              <p className="text-gray-600 dark:text-gray-300">No book requests yet.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {myTransactions.map((transaction) => {
+                const isRequester = transaction.borrowerId._id === currentUser?.id;
+                return (
+                  <div key={transaction._id} className="glass-card p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium">{transaction.bookId.title}</h4>
+                          <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${
+                            transaction.status === 'approved' 
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                              : transaction.status === 'rejected'
+                              ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                              : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+                          }`}>
+                            {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+                          </span>
+                        </div>
+                        
+                        {isRequester ? (
+                          <>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">
+                              Owner: {transaction.ownerId.name}
+                            </p>
+                            {transaction.status === 'approved' && (
+                              <p className="mt-2 text-sm text-green-600 dark:text-green-400">
+                                Book Owner will contact you soon via email or phone number
+                              </p>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">
+                              Requested by: {transaction.borrowerId.name}
+                            </p>
+                            {transaction.status === 'approved' && (
+                              <div className="mt-2 space-y-1">
+                                <p className="text-sm font-medium">Contact Information:</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-300">
+                                  Email: {transaction.borrowerId.email}
+                                </p>
+                                <p className="text-sm text-gray-600 dark:text-gray-300">
+                                  Phone: {transaction.borrowerId.mobile}
+                                </p>
+                              </div>
+                            )}
+                          </>
+                        )}
+                        
+                        {transaction.message && (
+                          <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
+                            Message: {transaction.message}
+                          </p>
+                        )}
+                      </div>
+                      
+                      {transaction.status === 'requested' && isRequester && (
+                        <button
+                          onClick={() => handleStatusUpdate(transaction._id, 'cancelled')}
+                          className="btn btn-sm btn-outline"
+                        >
+                          Cancel Request
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 };

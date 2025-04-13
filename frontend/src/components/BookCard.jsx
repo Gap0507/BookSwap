@@ -10,7 +10,7 @@ const BookCard = ({ book }) => {
   // Support both MongoDB _id and local storage id
   const bookId = book._id || book.id;
   const { title, author, genre, location, status, cover, description } = book;
-  const { currentUser, isOwner } = useAuth();
+  const { currentUser, isOwner, isAuthenticated } = useAuth();
   const { updateBookStatus, deleteBook } = useBooks();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -81,7 +81,7 @@ const BookCard = ({ book }) => {
         <img 
           src={getImageUrl(cover)} 
           alt={title}
-          className="w-full h-64 object-cover"
+          className="w-full h-64 object-contain bg-gray-50 dark:bg-gray-900"
         />
         <div className="absolute top-2 right-2">
           <span className={`px-2 py-1 text-xs font-bold rounded ${
@@ -123,9 +123,15 @@ const BookCard = ({ book }) => {
         </button>
         
         <div className="mt-4 flex flex-wrap gap-2">
-          <Link to={`/books/${bookId}`} className="btn btn-outline text-sm flex-1">
-            View Details
-          </Link>
+          {isAuthenticated ? (
+            <Link to={`/books/${bookId}`} className="btn btn-outline text-sm flex-1">
+              View Details
+            </Link>
+          ) : (
+            <Link to="/login" className="btn btn-outline text-sm flex-1 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20">
+              Login/Signup to View Details
+            </Link>
+          )}
           
           {isUserBook && (
             <>

@@ -1,91 +1,244 @@
-
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useEffect, useState } from 'react';
+
+function GridPattern() {
+  return (
+    <div className="absolute inset-0 -z-10 h-full w-full select-none overflow-hidden [mask-image:radial-gradient(white,transparent_85%)]">
+      <div className="absolute inset-0 bg-gradient-to-tr from-primary-50/70 via-secondary-50/70 to-amber-50/70 dark:from-primary-950/20 dark:via-secondary-950/20 dark:to-amber-950/20" />
+      <div className="absolute inset-0 bg-grid-gray-900/[0.02] dark:bg-grid-white/[0.02]" />
+      <div className="absolute -left-[40%] -top-[40%] h-[800px] w-[800px] rounded-full bg-primary-400/20 blur-3xl dark:bg-primary-600/10 animate-blob" />
+      <div className="absolute -right-[40%] top-[20%] h-[600px] w-[600px] rounded-full bg-secondary-400/20 blur-3xl dark:bg-secondary-600/10 animate-blob animation-delay-2000" />
+      <div className="absolute bottom-[10%] left-[20%] h-[700px] w-[700px] rounded-full bg-amber-400/20 blur-3xl dark:bg-amber-600/10 animate-blob animation-delay-4000" />
+    </div>
+  );
+}
+
+function Hero() {
+  return (
+    <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-4 sm:px-6 lg:px-8">
+      <GridPattern />
+
+      <div className="relative w-full max-w-7xl mx-auto">
+        <div className="text-center space-y-8 animate-fadeIn">
+          <div className="inline-flex items-center justify-center space-x-2 mb-4">
+            <div className="relative flex items-center bg-gray-900 dark:bg-white/10 px-6 py-2 rounded-full">
+              <span className="text-sm font-medium text-white">
+                Join the Reading Revolution
+              </span>
+            </div>
+          </div>
+          
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold font-serif tracking-tight">
+            <span className="block text-white mb-2">Share Stories,</span>
+            <span className="block text-white">
+              Connect Through
+              <span className="text-primary-400"> Books</span>
+            </span>
+          </h1>
+          
+          <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed">
+            Join our vibrant community where every book tells a story
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+            <Link 
+              to="/books" 
+              className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white bg-gradient-to-r from-primary-600 to-secondary-600 rounded-full overflow-hidden shadow-lg transform transition-all duration-500 hover:scale-105 hover:shadow-xl"
+            >
+              <span className="relative flex items-center">
+                Explore Library
+                <svg className="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const HomePage = () => {
   const { isAuthenticated } = useAuth();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <div className="animate-fadeIn">
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-600/20 to-secondary-600/20 dark:from-primary-900/30 dark:to-secondary-900/30 -z-10"></div>
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28">
-          <div className="text-center md:text-left md:w-2/3">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold mb-6 animate-slideUp">
-              Share Books,<br />
-              <span className="bg-gradient-to-r from-primary-600 to-secondary-600 dark:from-primary-400 dark:to-secondary-400 bg-clip-text text-transparent">
-                Connect Communities
+      <section className="relative min-h-[90vh] flex items-center overflow-hidden">
+        <GridPattern />
+
+        {/* Decorative Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          {/* Animated Circles */}
+          <div className="absolute top-1/4 left-4 w-72 h-72 bg-primary-500/30 rounded-full mix-blend-multiply filter blur-xl animate-blob" />
+          <div className="absolute top-1/4 right-4 w-72 h-72 bg-secondary-500/30 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000" />
+          <div className="absolute bottom-1/4 left-1/3 w-72 h-72 bg-amber-500/30 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000" />
+
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28 relative">
+          <div className="text-center max-w-3xl mx-auto">
+            {/* Badge */}
+            <div className="relative inline-flex items-center p-1 mb-8 group cursor-pointer">
+              <div className="absolute -inset-1 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200 animate-gradient" />
+              <div className="relative flex items-center space-x-2 bg-white dark:bg-gray-900 px-6 py-3 rounded-full">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-primary-500" />
+                </span>
+                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                  Join the Reading Revolution
+                </span>
+              </div>
+            </div>
+
+            {/* Main Heading */}
+            <div className="relative">
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-serif font-bold mb-8">
+                <span className="block mb-2 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-200 dark:to-white bg-clip-text text-transparent">
+                  Share Stories,
+                </span>
+                <span className="relative inline-block">
+                  Connect Through
+                  <span className="relative">
+                    <span className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-primary-500 to-secondary-500 transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
+                    <span className="relative text-primary-600 dark:text-primary-400"> Books</span>
+                  </span>
+                </span>
+              </h1>
+            </div>
+
+            {/* Description */}
+            <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed relative">
+              <span className="relative">
+                Join our vibrant community where every book tells a story
+                
               </span>
-            </h1>
-            
-            <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto md:mx-0 animate-slideUp animate-delay-100">
-              Join our peer-to-peer book exchange platform and discover new stories while sharing your favorites with others.
             </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start animate-slideUp animate-delay-200">
-              <Link to="/books" className="btn btn-primary px-8 py-3 text-lg">
-                Browse Books
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+              <Link 
+                to="/books" 
+                className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white bg-gradient-to-r from-primary-600 to-secondary-600 rounded-full overflow-hidden shadow-lg transform transition-all duration-500 hover:scale-105 hover:shadow-xl"
+              >
+                <span className="absolute inset-0 bg-gradient-to-r from-primary-500 to-secondary-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <span className="relative flex items-center">
+                  Explore Library
+                  <svg className="w-5 h-5 ml-2 -mr-1 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </span>
               </Link>
               
               {!isAuthenticated && (
-                <Link to="/register" className="btn btn-outline px-8 py-3 text-lg">
-                  Join Now
+                <Link 
+                  to="/register" 
+                  className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-gray-900 dark:text-white border-2 border-gray-900 dark:border-white rounded-full overflow-hidden transform transition-all duration-500 hover:scale-105"
+                >
+                  <span className="absolute inset-0 bg-gray-900 dark:bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-500" />
+                  <span className="relative flex items-center">
+                    Join Community
+                    <span className="ml-2 text-2xl group-hover:rotate-90 transition-transform duration-300">→</span>
+                  </span>
                 </Link>
               )}
             </div>
+
+            {/* Stats Preview */}
+            <div className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl mx-auto">
+              <div className="glass-card p-4 transform hover:scale-105 transition-all duration-300">
+                <div className="text-2xl font-bold text-primary-600 dark:text-primary-400">Books</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Ready to Share</div>
+              </div>
+              <div className="glass-card p-4 transform hover:scale-105 transition-all duration-300">
+                <div className="text-2xl font-bold text-secondary-600 dark:text-secondary-400">Community</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Growing Daily</div>
+              </div>
+              <div className="glass-card p-4 transform hover:scale-105 transition-all duration-300">
+                <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">Cities</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Connected</div>
+              </div>
+              <div className="glass-card p-4 transform hover:scale-105 transition-all duration-300">
+                <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">Exchanges</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Made Easy</div>
+              </div>
+            </div>
           </div>
-        </div>
-        
-        <div className="absolute bottom-0 right-0 w-full md:w-1/2 h-64 md:h-full -z-10 opacity-10 md:opacity-20">
-          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-            <path fill="currentColor" d="M38.5,-65.1C52.9,-60.5,69.3,-54.8,76.3,-43.2C83.3,-31.5,80.9,-14.1,76.1,1.2C71.3,16.5,64,29.8,56.1,43.9C48.2,58,39.7,72.9,26.9,78.5C14.1,84.2,-3,80.5,-20.4,76.6C-37.9,72.7,-55.7,68.6,-67.3,57.9C-78.9,47.2,-84.3,29.9,-85.2,12.8C-86.1,-4.3,-82.3,-21.3,-74.2,-35C-66.1,-48.7,-53.5,-59.2,-40,-64.5C-26.4,-69.7,-11.9,-69.7,1.1,-71.6C14.1,-73.4,24.1,-69.8,38.5,-65.1Z" transform="translate(100 100)" />
-          </svg>
         </div>
       </section>
       
       {/* Features Section */}
-      <section className="py-16 md:py-24">
+      <section className="py-20 md:py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-serif font-bold text-center mb-12">
-            How It <span className="bg-gradient-to-r from-primary-600 to-secondary-600 dark:from-primary-400 dark:to-secondary-400 bg-clip-text text-transparent">Works</span>
+          <h2 className="text-3xl md:text-4xl font-serif font-bold text-center mb-16">
+            How <span className="bg-gradient-to-r from-primary-600 to-secondary-600 dark:from-primary-400 dark:to-secondary-400 bg-clip-text text-transparent">BookSwap</span> Works
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="glass-card p-6 animate-scaleIn">
-              <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-primary-600 dark:text-primary-300">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                </svg>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            <div className="glass-card p-8 transform hover:scale-105 transition-all duration-500">
+              <div className="relative mb-8 overflow-hidden rounded-lg group">
+                <img 
+                  src="https://images.unsplash.com/photo-1585779034823-7e9ac8faec70?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1035&q=80"
+                  alt="Create Account"
+                  className="w-full h-48 object-cover transform group-hover:scale-110 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-900/75 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute bottom-4 left-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                  <span className="text-sm font-medium">Step 1</span>
+                </div>
               </div>
-              <h3 className="text-xl font-bold mb-2">Create an Account</h3>
+              <h3 className="text-xl font-bold mb-3">Create Your Profile</h3>
               <p className="text-gray-600 dark:text-gray-300">
-                Sign up as a Book Owner or Book Seeker to start your journey.
+                Join as a Book Owner to share your collection or as a Seeker to discover new reads.
               </p>
             </div>
             
-            <div className="glass-card p-6 animate-scaleIn animate-delay-100">
-              <div className="w-12 h-12 bg-secondary-100 dark:bg-secondary-900 rounded-full flex items-center justify-center mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-secondary-600 dark:text-secondary-300">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
-                </svg>
+            <div className="glass-card p-8 transform hover:scale-105 transition-all duration-500">
+              <div className="relative mb-8 overflow-hidden rounded-lg group">
+                <img 
+                  src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80"
+                  alt="List Books"
+                  className="w-full h-48 object-cover transform group-hover:scale-110 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-900/75 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute bottom-4 left-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                  <span className="text-sm font-medium">Step 2</span>
+                </div>
               </div>
-              <h3 className="text-xl font-bold mb-2">List or Browse Books</h3>
+              <h3 className="text-xl font-bold mb-3">Share Your Library</h3>
               <p className="text-gray-600 dark:text-gray-300">
-                List your books for exchange or browse books available in your area.
+                List your books with beautiful covers and detailed descriptions to attract potential readers.
               </p>
             </div>
             
-            <div className="glass-card p-6 animate-scaleIn animate-delay-200">
-              <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900 rounded-full flex items-center justify-center mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-amber-600 dark:text-amber-300">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
-                </svg>
+            <div className="glass-card p-8 transform hover:scale-105 transition-all duration-500">
+              <div className="relative mb-8 overflow-hidden rounded-lg group">
+                <img 
+                  src="https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1049&q=80"
+                  alt="Connect"
+                  className="w-full h-48 object-cover transform group-hover:scale-110 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-900/75 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute bottom-4 left-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                  <span className="text-sm font-medium">Step 3</span>
+                </div>
               </div>
-              <h3 className="text-xl font-bold mb-2">Connect & Exchange</h3>
+              <h3 className="text-xl font-bold mb-3">Connect & Exchange</h3>
               <p className="text-gray-600 dark:text-gray-300">
-                Connect with other book lovers and arrange exchanges on your terms.
+                Meet fellow book lovers, arrange exchanges, and grow your reading network locally.
               </p>
             </div>
           </div>
@@ -93,20 +246,48 @@ const HomePage = () => {
       </section>
       
       {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-br from-primary-600 to-secondary-600 dark:from-primary-800 dark:to-secondary-800 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-serif font-bold mb-6">Ready to start sharing books?</h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto">
-            Join our community of book lovers today and discover new stories while sharing your favorites with others.
+      <section className="relative py-20 overflow-hidden">
+        <div className="absolute inset-0 -z-10 h-full w-full">
+          {/* Background with contained overflow */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-primary-50/70 via-secondary-50/70 to-amber-50/70 dark:from-primary-950/20 dark:via-secondary-950/20 dark:to-amber-950/20" />
+          <div className="absolute inset-0 bg-grid-gray-900/[0.02] dark:bg-grid-white/[0.02]" />
+          {/* Adjusted blob positions to prevent overflow */}
+          <div className="absolute left-0 top-0 h-[600px] w-[600px] rounded-full bg-primary-400/20 blur-3xl dark:bg-primary-600/10 animate-blob" />
+          <div className="absolute right-0 top-[20%] h-[500px] w-[500px] rounded-full bg-secondary-400/20 blur-3xl dark:bg-secondary-600/10 animate-blob animation-delay-2000" />
+          <div className="absolute bottom-0 left-[20%] h-[550px] w-[550px] rounded-full bg-amber-400/20 blur-3xl dark:bg-amber-600/10 animate-blob animation-delay-4000" />
+        </div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
+          <h2 className="text-3xl md:text-4xl font-serif font-bold mb-6 text-gray-900 dark:text-white">
+            Ready to Start Your Reading Journey?
+          </h2>
+          <p className="text-xl mb-8 max-w-2xl mx-auto text-gray-600 dark:text-gray-300">
+            Join our community of book lovers and start sharing your favorite reads today.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/books" className="btn bg-white text-primary-700 hover:bg-gray-100 px-8 py-3 text-lg">
-              Browse Books
+          <div className="flex flex-col sm:flex-row gap-6 justify-center">
+            <Link 
+              to="/books" 
+              className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-primary-700 bg-white rounded-full overflow-hidden transform transition-all duration-500 hover:scale-105 hover:shadow-xl"
+            >
+              <span className="absolute inset-0 bg-gray-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
+              <span className="relative flex items-center">
+                Browse Collection
+                <svg className="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </span>
             </Link>
             
             {!isAuthenticated && (
-              <Link to="/register" className="btn border-2 border-white bg-transparent hover:bg-white/10 px-8 py-3 text-lg">
-                Sign Up Now
+              <Link 
+                to="/register" 
+                className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white border-2 border-white rounded-full overflow-hidden transform transition-all duration-500 hover:scale-105"
+              >
+                <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-500"></span>
+                <span className="relative flex items-center">
+                  Create Account
+                  <span className="ml-2 text-2xl group-hover:rotate-90 transition-transform duration-300">→</span>
+                </span>
               </Link>
             )}
           </div>

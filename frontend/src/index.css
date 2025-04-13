@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@300;400;700&display=swap');
 
 @tailwind base;
@@ -59,16 +58,149 @@
   .card-hover {
     @apply hover:-translate-y-1 hover:shadow-lg transition-all duration-300;
   }
+}
 
-  .animate-delay-100 {
-    animation-delay: 100ms;
+/* Grid Pattern */
+.bg-grid-gray-900\/\[0\.02\] {
+  background-image: linear-gradient(to right, rgb(17 24 39 / 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(17 24 39 / 0.02) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.bg-grid-white\/\[0\.02\] {
+  background-image: linear-gradient(to right, rgb(255 255 255 / 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.02) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Animation Delays */
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+.animate-delay-100 {
+  animation-delay: 100ms;
+}
+
+.animate-delay-200 {
+  animation-delay: 200ms;
+}
+
+.animate-delay-300 {
+  animation-delay: 300ms;
+}
+
+/* Custom Animations */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
   }
-  
-  .animate-delay-200 {
-    animation-delay: 200ms;
+  to {
+    transform: rotate(360deg);
   }
-  
-  .animate-delay-300 {
-    animation-delay: 300ms;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px) rotate(12deg);
   }
+  50% {
+    transform: translateY(-20px) rotate(12deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(12deg);
+  }
+}
+
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+/* Custom Transitions */
+.transition-transform {
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+.transition-colors {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+/* Gradient Text */
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-secondary-600;
+}
+
+/* Hover Effects */
+.hover-lift {
+  @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg;
+}
+
+/* Blur Effects */
+.backdrop-blur {
+  backdrop-filter: blur(8px);
+}
+
+/* Filter Effects */
+.filter-none {
+  filter: none;
+}
+
+.filter-grayscale {
+  filter: grayscale(100%);
+}
+
+.mix-blend-multiply {
+  mix-blend-mode: multiply;
+}
+
+/* Shadow Effects */
+.shadow-glass {
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+}
+
+/* Fade In Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 1s ease-out forwards;
 }

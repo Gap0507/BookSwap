@@ -9,10 +9,11 @@ export const BookProvider = ({ children }) => {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
 
   // Fetch all books
   const fetchBooks = async () => {
+    if (authLoading) return;
     setLoading(true);
     try {
       const response = await booksAPI.getAllBooks();
@@ -32,8 +33,10 @@ export const BookProvider = ({ children }) => {
 
   // Load books on mount
   useEffect(() => {
-    fetchBooks();
-  }, []);
+    if (!authLoading) {
+      fetchBooks();
+    }
+  }, [authLoading]);
 
   // Add a new book
   const addBook = async (bookData) => {
@@ -151,5 +154,9 @@ export const BookProvider = ({ children }) => {
 
 // Export the hook after the component
 export const useBooks = () => {
-  return useContext(BookContext);
+  const context = useContext(BookContext);
+  if (context === undefined) {
+    throw new Error('useBooks must be used within a BookProvider');
+  }
+  return context;
 };
