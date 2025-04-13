@@ -2,12 +2,16 @@
 
 BookSwap is a full-stack web application that allows users to share, borrow, and exchange books within a community. This platform enables book lovers to discover new reads, connect with others, and reduce waste by reusing books.
 
-## Features
+## LIVE DEMO LINK BOTH FRONTEND AND BACKEND HAS BEEN DEPLOYED IN RENDER 
+- **LIVE LINK**: https://bookswap-7nnd.onrender.com/
+
+
+## Features And Bonus Features
 
 - **User Authentication**: Secure signup and login functionality
 - **Book Management**: Add, edit, browse, and search for books
 - **Book Swapping**: Request and manage book trades/loans
-- **User Dashboard**: Track your book collection, loans, and borrowing history
+- **User Dashboard**: Track your book collection and borrowing history
 - **Responsive Design**: Optimized for both desktop and mobile devices
 
 ## User Types and Workflow
@@ -175,6 +179,9 @@ BookSwap/
 - `GET /api/transactions` - Get user transactions
 - `POST /api/transactions` - Create a transaction request
 - `PUT /api/transactions/:id` - Update transaction status
+
+### Transactions
+AI TOOLS USED: CLAUDE
 
 ## License
 
