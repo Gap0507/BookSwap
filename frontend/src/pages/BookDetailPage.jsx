@@ -7,6 +7,7 @@ import { toast } from 'react-hot-toast';
 
 // API base URL for resolving image paths
 const API_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = API_URL.replace('/api', ''); // Remove '/api' from the URL
 
 const BookDetailPage = () => {
   const { id } = useParams();
@@ -33,7 +34,7 @@ const BookDetailPage = () => {
     }
     
     // Otherwise, it's a relative path from the server
-    return `${API_URL}${coverPath}`;
+    return `${BASE_URL}${coverPath}`;
   };
 
   useEffect(() => {

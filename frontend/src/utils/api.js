@@ -1,5 +1,5 @@
 // Default to localhost if env variable is not set
-const API_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api`;
+const API_URL = `${import.meta.env.VITE_API_URL}`;
 
 // Helper for making API requests
 export const apiRequest = async (endpoint, options = {}) => {
