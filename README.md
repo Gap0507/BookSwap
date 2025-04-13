@@ -4,6 +4,13 @@ BookSwap is a full-stack web application that allows users to share, borrow, and
 
 ## LIVE DEMO LINK BOTH FRONTEND AND BACKEND HAS BEEN DEPLOYED IN RENDER 
 - **LIVE LINK**: https://bookswap-7nnd.onrender.com/
+- **DEMO ACCOUNT**
+  - **Book Owner**
+    - Email: shahgarv0507@gmail.com
+    - Password: garv123
+  - **Book Borrower**
+    - Email: jeet1234@gmail.com
+    - Password: jeet123
 
 
 ## Features And Bonus Features
