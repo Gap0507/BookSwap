@@ -2,19 +2,45 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useBooks } from '../context/BookContext';
+import { createPortal } from 'react-dom';
+import { toast } from 'react-hot-toast';
 
 // API base URL for resolving image paths
-const API_URL = 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL;
+
+// Function to resolve image path
+const getImageUrl = (coverPath) => {
+  if (!coverPath) return "https://source.unsplash.com/random/400x600/?book";
+  
+  // If it's a full URL or data URL, use it directly
+  if (coverPath.startsWith('http') || coverPath.startsWith('data:')) {
+    return coverPath;
+  }
+  
+  // Otherwise, it's a relative path from the server
+  return `${API_URL}${coverPath}`;
+};
 
 const BookCard = ({ book }) => {
   // Support both MongoDB _id and local storage id
   const bookId = book._id || book.id;
   const { title, author, genre, location, status, cover, description } = book;
   const { currentUser, isOwner, isAuthenticated } = useAuth();
-  const { updateBookStatus, deleteBook } = useBooks();
+  const { updateBookStatus, deleteBook, updateBook } = useBooks();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editedBook, setEditedBook] = useState({
+    title: title,
+    author: author,
+    genre: genre,
+    location: location,
+    description: description,
+  });
+  const [previewUrl, setPreviewUrl] = useState(cover ? getImageUrl(cover) : '');
+  const [editError, setEditError] = useState('');
 
   // Check if this is user's book, supporting both local and API data structures
   const isUserBook = currentUser && isOwner && 
@@ -22,42 +48,67 @@ const BookCard = ({ book }) => {
      (book.ownerId && book.ownerId._id === currentUser.id) ||
      (book.ownerId && typeof book.ownerId === 'string' && book.ownerId === currentUser.id));
 
-  // Function to resolve image path
-  const getImageUrl = (coverPath) => {
-    if (!coverPath) return "https://source.unsplash.com/random/400x600/?book";
-    
-    // If it's a full URL or data URL, use it directly
-    if (coverPath.startsWith('http') || coverPath.startsWith('data:')) {
-      return coverPath;
-    }
-    
-    // Otherwise, it's a relative path from the server
-    return `${API_URL}${coverPath}`;
-  };
-
   const handleStatusToggle = async () => {
     setIsUpdating(true);
     try {
       const newStatus = status === 'available' ? 'rented' : 'available';
       await updateBookStatus(bookId, newStatus);
+      book.status = newStatus; // Update the local book state
+      toast.success(`Book marked as ${newStatus}`);
     } catch (error) {
       console.error('Failed to update book status:', error);
-      alert('Failed to update book status. Please try again.');
+      toast.error('Failed to update book status. Please try again.');
     } finally {
       setIsUpdating(false);
     }
   };
 
   const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this book?')) {
-      setIsDeleting(true);
-      try {
-        await deleteBook(bookId);
-      } catch (error) {
-        console.error('Failed to delete book:', error);
-        alert('Failed to delete book. Please try again.');
-        setIsDeleting(false);
-      }
+    setIsDeleting(true);
+    try {
+      await deleteBook(bookId);
+      toast.success('Book deleted successfully');
+    } catch (error) {
+      console.error('Failed to delete book:', error);
+      toast.error('Failed to delete book. Please try again.');
+      setIsDeleting(false);
+    }
+    setShowDeleteConfirm(false);
+  };
+
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditedBook(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPreviewUrl(e.target.result);
+      };
+      reader.readAsDataURL(file);
+      setEditedBook(prev => ({ ...prev, coverFile: file }));
+    }
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    setEditError('');
+    setIsUpdating(true);
+
+    try {
+      const updatedBook = await updateBook(bookId, editedBook);
+      Object.assign(book, updatedBook);
+      setShowEditModal(false);
+      toast.success('Book updated successfully');
+    } catch (error) {
+      console.error('Failed to update book:', error);
+      setEditError('Failed to update book. Please try again.');
+      toast.error('Failed to update book. Please try again.');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -95,7 +146,19 @@ const BookCard = ({ book }) => {
       </div>
       
       <div className="p-4">
-        <h3 className="text-xl font-serif font-bold mb-1 truncate">{title}</h3>
+        <div className="flex justify-between items-start mb-1">
+          <h3 className="text-xl font-serif font-bold truncate flex-1">{title}</h3>
+          {isUserBook && (
+            <button 
+              onClick={() => setShowEditModal(true)}
+              className="text-gray-500 hover:text-primary-600 dark:hover:text-primary-400 p-1 -mt-1 -mr-1"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+              </svg>
+            </button>
+          )}
+        </div>
         <p className="text-gray-600 dark:text-gray-300 mb-2">{author}</p>
         
         <div className="flex flex-wrap gap-2 mb-3">
@@ -158,7 +221,7 @@ const BookCard = ({ book }) => {
               </button>
               
               <button 
-                onClick={handleDelete}
+                onClick={() => setShowDeleteConfirm(true)}
                 disabled={isDeleting || isUpdating}
                 className={`btn text-sm flex-shrink-0 bg-red-500 hover:bg-red-600 text-white ${
                   (isDeleting || isUpdating) ? 'opacity-70 cursor-not-allowed' : ''
@@ -172,6 +235,190 @@ const BookCard = ({ book }) => {
           )}
         </div>
       </div>
+
+      {/* Move modals to portal */}
+      {(showDeleteConfirm || showEditModal) && createPortal(
+        <>
+          {/* Delete Confirmation Popup */}
+          {showDeleteConfirm && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full mx-4">
+                <h3 className="text-xl font-bold mb-4">Delete Confirmation</h3>
+                <p className="mb-6">Are you sure you want to delete "{title}"?</p>
+                <div className="flex justify-end gap-4">
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="btn btn-outline"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="btn bg-red-500 hover:bg-red-600 text-white"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Edit Modal */}
+          {showEditModal && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-2xl w-full mx-4">
+                <h3 className="text-xl font-bold mb-4">Edit Book</h3>
+                {editError && (
+                  <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-sm">
+                    {editError}
+                  </div>
+                )}
+                <form onSubmit={handleEditSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="md:col-span-1 space-y-4">
+                    <div>
+                      <label htmlFor="title" className="label">
+                        Title <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        value={editedBook.title}
+                        onChange={handleEditInputChange}
+                        className="input"
+                        placeholder="Enter book title"
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="author" className="label">
+                        Author <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="author"
+                        name="author"
+                        value={editedBook.author}
+                        onChange={handleEditInputChange}
+                        className="input"
+                        placeholder="Enter author name"
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="genre" className="label">
+                        Genre
+                      </label>
+                      <select
+                        id="genre"
+                        name="genre"
+                        value={editedBook.genre}
+                        onChange={handleEditInputChange}
+                        className="input"
+                      >
+                        <option value="">Select a genre</option>
+                        <option value="Action">Action</option>
+                        <option value="Adventure">Adventure</option>
+                        <option value="Motivational">Motivational</option>
+                        <option value="Fiction">Fiction</option>
+                        <option value="Fantasy">Fantasy</option>
+                        <option value="Dystopian">Dystopian</option>
+                        <option value="Romance">Romance</option>
+                        <option value="Classic">Classic</option>
+                        <option value="Non-fiction">Non-fiction</option>
+                        <option value="Science">Science</option>
+                        <option value="History">History</option>
+                        <option value="Biography">Biography</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="location" className="label">
+                        Location <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="location"
+                        name="location"
+                        value={editedBook.location}
+                        onChange={handleEditInputChange}
+                        className="input"
+                        placeholder="Enter your city/location"
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="md:col-span-1 space-y-4">
+                    <div>
+                      <label htmlFor="description" className="label">
+                        Description
+                      </label>
+                      <textarea
+                        id="description"
+                        name="description"
+                        value={editedBook.description}
+                        onChange={handleEditInputChange}
+                        className="input h-32"
+                        placeholder="Enter a brief description of the book"
+                      ></textarea>
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="cover" className="label">
+                        Book Cover
+                      </label>
+                      <div className="flex items-center gap-4">
+                        <label className="flex-1 btn btn-outline flex items-center justify-center gap-2 cursor-pointer">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                          </svg>
+                          Change Image
+                          <input
+                            type="file"
+                            id="cover"
+                            name="cover"
+                            onChange={handleImageChange}
+                            className="hidden"
+                            accept="image/*"
+                          />
+                        </label>
+                        
+                        {previewUrl && (
+                          <div className="w-16 h-16 overflow-hidden rounded">
+                            <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="md:col-span-2 flex justify-end gap-3 pt-4">
+                    <button 
+                      type="button" 
+                      onClick={() => setShowEditModal(false)}
+                      className="btn btn-outline"
+                      disabled={isUpdating}
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="submit" 
+                      className="btn btn-primary px-8"
+                      disabled={isUpdating}
+                    >
+                      {isUpdating ? 'Updating...' : 'Save Changes'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+        </>,
+        document.body
+      )}
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import { BookProvider } from './context/BookContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -20,6 +21,28 @@ function App() {
         <BookProvider>
           <TransactionProvider>
             <Layout>
+              <Toaster
+                position="top-center"
+                toastOptions={{
+                  duration: 3000,
+                  style: {
+                    background: 'var(--toast-bg)',
+                    color: 'var(--toast-color)',
+                  },
+                  success: {
+                    iconTheme: {
+                      primary: 'var(--toast-success)',
+                      secondary: 'white',
+                    },
+                  },
+                  error: {
+                    iconTheme: {
+                      primary: 'var(--toast-error)',
+                      secondary: 'white',
+                    },
+                  },
+                }}
+              />
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<LoginPage />} />

@@ -204,3 +204,24 @@
 .animate-fadeIn {
   animation: fadeIn 1s ease-out forwards;
 }
+
+:root {
+  /* ... existing variables ... */
+
+  /* Toast Theme Variables */
+  --toast-bg: #ffffff;
+  --toast-color: #1f2937;
+  --toast-success: #22c55e;
+  --toast-error: #ef4444;
+}
+
+/* Dark mode toast variables */
+.dark {
+  /* ... existing dark mode variables ... */
+  
+  /* Toast Theme Variables */
+  --toast-bg: #1f2937;
+  --toast-color: #ffffff;
+  --toast-success: #22c55e;
+  --toast-error: #ef4444;
+}

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-hot-toast';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -22,6 +23,7 @@ const LoginPage = () => {
     
     if (!email || !password) {
       setError('Please fill in all fields');
+      toast.error('Please fill in all fields');
       setLoading(false);
       return;
     }
@@ -30,13 +32,16 @@ const LoginPage = () => {
       const result = await login(email, password);
       
       if (result.success) {
+        toast.success('Successfully logged in!');
         navigate(from, { replace: true });
       } else {
         setError(result.message);
+        toast.error(result.message || 'Failed to login');
       }
     } catch (err) {
       console.error('Login error:', err);
       setError(err.message || 'Failed to login. Please try again.');
+      toast.error(err.message || 'Failed to login. Please try again.');
     } finally {
       setLoading(false);
     }

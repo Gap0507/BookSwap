@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-hot-toast';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -31,12 +32,14 @@ const RegisterPage = () => {
     // Validation
     if (!formData.name || !formData.email || !formData.password || !formData.mobile || !formData.role) {
       setError('Please fill in all fields');
+      toast.error('Please fill in all fields');
       setLoading(false);
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
+      toast.error('Passwords do not match');
       setLoading(false);
       return;
     }
@@ -51,13 +54,16 @@ const RegisterPage = () => {
       });
 
       if (result.success) {
+        toast.success('Account created successfully!');
         navigate('/dashboard');
       } else {
         setError(result.message);
+        toast.error(result.message || 'Failed to register');
       }
     } catch (err) {
       console.error('Registration error:', err);
       setError(err.message || 'Failed to register. Please try again.');
+      toast.error(err.message || 'Failed to register. Please try again.');
     } finally {
       setLoading(false);
     }

@@ -19,6 +19,11 @@ const BooksPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Initial fetch of books
+  useEffect(() => {
+    fetchBooks();
+  }, []);
+
   // For server-side filtering
   const fetchFilteredBooks = async () => {
     if (!USE_SERVER_FILTERING) return;
@@ -82,12 +87,14 @@ const BooksPage = () => {
     setFilteredBooks(result);
   };
 
-  // Initial load of books and filtering setup
+  // Update filtered books whenever books, search term, or filters change
   useEffect(() => {
-    if (USE_SERVER_FILTERING) {
-      fetchFilteredBooks();
-    } else {
-      filterBooksLocally();
+    if (books.length > 0) {
+      if (USE_SERVER_FILTERING) {
+        fetchFilteredBooks();
+      } else {
+        filterBooksLocally();
+      }
     }
   }, [books, searchTerm, filters]);
 

@@ -1,20 +1,49 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useBooks } from '../context/BookContext';
 
 const SearchFilters = ({ onSearch, onFilter }) => {
+  const { books } = useBooks();
   const [searchTerm, setSearchTerm] = useState('');
   const [location, setLocation] = useState('');
   const [genre, setGenre] = useState('');
   const [status, setStatus] = useState('');
+  const [uniqueLocations, setUniqueLocations] = useState([]);
+  const [uniqueGenres, setUniqueGenres] = useState([]);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    onSearch(searchTerm);
+  // Extract unique locations and genres from books
+  useEffect(() => {
+    if (books.length > 0) {
+      const locations = [...new Set(books.map(book => book.location))].filter(Boolean).sort();
+      const genres = [...new Set(books.map(book => book.genre))].filter(Boolean).sort();
+      setUniqueLocations(locations);
+      setUniqueGenres(genres);
+    }
+  }, [books]);
+
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    onSearch(value); // Immediately trigger search
   };
 
-  const handleFilter = (e) => {
-    e.preventDefault();
-    onFilter({ location, genre, status });
+  // Handle filter changes
+  const handleLocationChange = (e) => {
+    const value = e.target.value;
+    setLocation(value);
+    onFilter({ location: value, genre, status }); // Immediately apply filter
+  };
+
+  const handleGenreChange = (e) => {
+    const value = e.target.value;
+    setGenre(value);
+    onFilter({ location, genre: value, status }); // Immediately apply filter
+  };
+
+  const handleStatusChange = (e) => {
+    const value = e.target.value;
+    setStatus(value);
+    onFilter({ location, genre, status: value }); // Immediately apply filter
   };
 
   const handleReset = () => {
@@ -29,20 +58,13 @@ const SearchFilters = ({ onSearch, onFilter }) => {
   return (
     <div className="glass-card p-4 mb-6 animate-fadeIn">
       <div className="mb-4">
-        <form onSubmit={handleSearch} className="flex gap-2">
-          <input
-            type="text"
-            placeholder="Search by title or author..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="input flex-grow"
-          />
-          <button type="submit" className="btn btn-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-            </svg>
-          </button>
-        </form>
+        <input
+          type="text"
+          placeholder="Search by title or author..."
+          value={searchTerm}
+          onChange={handleSearchChange}
+          className="input w-full"
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -51,15 +73,13 @@ const SearchFilters = ({ onSearch, onFilter }) => {
           <select
             id="location"
             value={location}
-            onChange={(e) => setLocation(e.target.value)}
+            onChange={handleLocationChange}
             className="input"
           >
             <option value="">All Locations</option>
-            <option value="New York">New York</option>
-            <option value="Chicago">Chicago</option>
-            <option value="San Francisco">San Francisco</option>
-            <option value="Boston">Boston</option>
-            <option value="London">London</option>
+            {uniqueLocations.map(loc => (
+              <option key={loc} value={loc}>{loc}</option>
+            ))}
           </select>
         </div>
 
@@ -68,15 +88,13 @@ const SearchFilters = ({ onSearch, onFilter }) => {
           <select
             id="genre"
             value={genre}
-            onChange={(e) => setGenre(e.target.value)}
+            onChange={handleGenreChange}
             className="input"
           >
             <option value="">All Genres</option>
-            <option value="Fiction">Fiction</option>
-            <option value="Fantasy">Fantasy</option>
-            <option value="Dystopian">Dystopian</option>
-            <option value="Romance">Romance</option>
-            <option value="Classic">Classic</option>
+            {uniqueGenres.map(g => (
+              <option key={g} value={g}>{g}</option>
+            ))}
           </select>
         </div>
 
@@ -85,7 +103,7 @@ const SearchFilters = ({ onSearch, onFilter }) => {
           <select
             id="status"
             value={status}
-            onChange={(e) => setStatus(e.target.value)}
+            onChange={handleStatusChange}
             className="input"
           >
             <option value="">All Status</option>
@@ -94,18 +112,12 @@ const SearchFilters = ({ onSearch, onFilter }) => {
           </select>
         </div>
 
-        <div className="flex items-end gap-2">
-          <button 
-            onClick={handleFilter}
-            className="btn btn-primary flex-1"
-          >
-            Apply Filters
-          </button>
+        <div className="flex items-end">
           <button 
             onClick={handleReset}
-            className="btn btn-outline"
+            className="btn btn-outline w-full"
           >
-            Reset
+            Reset Filters
           </button>
         </div>
       </div>

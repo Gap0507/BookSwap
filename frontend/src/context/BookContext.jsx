@@ -133,12 +133,36 @@ export const BookProvider = ({ children }) => {
     }
   };
 
+  // Update a book
+  const updateBook = async (id, bookData) => {
+    try {
+      if (isAuthenticated) {
+        const response = await booksAPI.updateBook(id, bookData);
+        if (response.success) {
+          setBooks(prevBooks => 
+            prevBooks.map(book => book.id === id ? response.book : book)
+          );
+          return response.book;
+        } else {
+          throw new Error(response.message || 'Failed to update book');
+        }
+      } else {
+        throw new Error('Authentication required to update a book');
+      }
+    } catch (err) {
+      console.error('Error updating book:', err);
+      setError(err.message);
+      throw err;
+    }
+  };
+
   const value = {
     books,
     loading,
     error,
     fetchBooks,
     addBook,
+    updateBook,
     updateBookStatus,
     deleteBook,
     getBooksByOwner,

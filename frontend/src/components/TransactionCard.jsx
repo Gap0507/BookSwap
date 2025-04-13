@@ -1,5 +1,6 @@
 import { useAuth } from '../context/AuthContext';
 import { useTransaction } from '../context/TransactionContext';
+import { toast } from 'react-hot-toast';
 
 const TransactionCard = ({ transaction }) => {
   const { currentUser } = useAuth();
@@ -27,8 +28,17 @@ const TransactionCard = ({ transaction }) => {
   const handleStatusUpdate = async (newStatus) => {
     try {
       await updateTransactionStatus(transaction._id, newStatus);
+      const statusMessages = {
+        approved: 'Request approved successfully',
+        rejected: 'Request rejected',
+        active: 'Exchange started',
+        completed: 'Exchange completed',
+        cancelled: 'Request cancelled'
+      };
+      toast.success(statusMessages[newStatus] || 'Status updated successfully');
     } catch (error) {
       console.error('Error updating transaction:', error);
+      toast.error('Failed to update request status. Please try again.');
     }
   };
 
