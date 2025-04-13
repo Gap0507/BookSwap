@@ -120,7 +120,7 @@ VITE_API_URL=http://localhost:5000/api
 npm run dev
 ```
 
-The frontend will run on http://localhost:5173
+The frontend will run on http://localhost:8080
 
 ## Usage
 
