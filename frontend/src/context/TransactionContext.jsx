@@ -1,89 +1,92 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { transactionsAPI } from '../utils/api';
+import { useAuth } from './AuthContext';
+import { toast } from 'react-hot-toast';
 
 const TransactionContext = createContext();
 
-export const useTransaction = () => {
-  const context = useContext(TransactionContext);
-  if (!context) {
-    throw new Error('useTransaction must be used within a TransactionProvider');
-  }
-  return context;
-};
+export const useTransaction = () => useContext(TransactionContext);
 
 export const TransactionProvider = ({ children }) => {
+  const { currentUser } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Create a new transaction request
-  const createTransaction = async (data) => {
-    setLoading(true);
-    try {
-      const response = await transactionsAPI.createTransaction(data);
-      if (response.success) {
-        setTransactions(prev => [response.transaction, ...prev]);
-        return response.transaction;
-      } else {
-        throw new Error(response.message || 'Failed to create transaction');
-      }
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
+  // Fetch transactions when user is logged in
+  useEffect(() => {
+    if (currentUser) {
+      fetchTransactions();
     }
-  };
+  }, [currentUser]);
 
-  // Get all transactions for current user
-  const fetchMyTransactions = async () => {
+  const fetchTransactions = async () => {
+    if (!currentUser) return;
+    
     setLoading(true);
     try {
       const response = await transactionsAPI.getMyTransactions();
       if (response.success) {
         setTransactions(response.transactions);
+        setError(null);
       } else {
         throw new Error(response.message || 'Failed to fetch transactions');
       }
     } catch (err) {
+      console.error('Error fetching transactions:', err);
       setError(err.message);
-      throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  // Update transaction status
+  // Fix: Modified to accept a transaction object with bookId and message properties
+  const createTransaction = async (transactionData) => {
+    try {
+      const response = await transactionsAPI.createTransaction(transactionData);
+      if (response.success) {
+        // Add the new transaction to the state
+        setTransactions([response.transaction, ...transactions]);
+        return response.transaction;
+      } else {
+        throw new Error(response.message || 'Failed to create transaction');
+      }
+    } catch (err) {
+      console.error('Error creating transaction:', err);
+      throw err;
+    }
+  };
+
   const updateTransactionStatus = async (transactionId, status) => {
-    setLoading(true);
     try {
       const response = await transactionsAPI.updateTransactionStatus(transactionId, status);
       if (response.success) {
-        setTransactions(prev => 
-          prev.map(t => t._id === transactionId ? response.transaction : t)
-        );
+        // Update the transaction in the state with the complete updated transaction data
+        setTransactions(transactions.map(t => 
+          t._id === transactionId ? response.transaction : t
+        ));
         return response.transaction;
       } else {
         throw new Error(response.message || 'Failed to update transaction');
       }
     } catch (err) {
-      setError(err.message);
+      console.error('Error updating transaction:', err);
       throw err;
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
-    <TransactionContext.Provider value={{
-      transactions,
-      loading,
-      error,
-      createTransaction,
-      fetchMyTransactions,
-      updateTransactionStatus
-    }}>
+    <TransactionContext.Provider
+      value={{
+        transactions,
+        loading,
+        error,
+        fetchTransactions,
+        createTransaction,
+        updateTransactionStatus
+      }}
+    >
       {children}
     </TransactionContext.Provider>
   );
-}; 
+};

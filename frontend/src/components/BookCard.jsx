@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useBooks } from '../context/BookContext';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
+import { authAPI } from '../utils/api';
+import TrustScoreBadge from './TrustScoreBadge';
 
 // API base URL for resolving image paths
 const API_URL = import.meta.env.VITE_API_URL;
@@ -42,12 +44,56 @@ const BookCard = ({ book }) => {
   });
   const [previewUrl, setPreviewUrl] = useState(cover ? getImageUrl(cover) : '');
   const [editError, setEditError] = useState('');
+  
+  // New state for owner data
+  const [owner, setOwner] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   // Check if this is user's book, supporting both local and API data structures
   const isUserBook = currentUser && isOwner && 
     (book.ownerId === currentUser.id || 
      (book.ownerId && book.ownerId._id === currentUser.id) ||
      (book.ownerId && typeof book.ownerId === 'string' && book.ownerId === currentUser.id));
+
+  // Get status badge color
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'available':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+      case 'rented':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+      case 'unavailable':
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+    }
+  };
+
+  // Fetch owner data if needed
+  useEffect(() => {
+    // If the book has an ownerId object with all the data we need
+    if (book.ownerId && typeof book.ownerId === 'object' && book.ownerId._id) {
+      setOwner(book.ownerId);
+    } 
+    // If we only have the owner ID, fetch the owner data
+    else if (book.ownerId && typeof book.ownerId === 'string') {
+      const fetchOwner = async () => {
+        setLoading(true);
+        try {
+          const response = await authAPI.getUserById(book.ownerId);
+          if (response.success) {
+            setOwner(response.user);
+          }
+        } catch (error) {
+          console.error('Error fetching book owner:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      fetchOwner();
+    }
+  }, [book]);
 
   const handleStatusToggle = async () => {
     setIsUpdating(true);
@@ -185,6 +231,24 @@ const BookCard = ({ book }) => {
         >
           {isExpanded ? 'Show less' : 'Show more'}
         </button>
+        
+        {/* Owner info with trust score */}
+        {owner && (
+          <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="w-6 h-6 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white text-xs font-bold mr-2">
+                {owner.name ? owner.name.charAt(0) : '?'}
+              </div>
+              <span className="text-xs text-gray-600 dark:text-gray-300 truncate max-w-[100px]">
+                {owner.name || 'Unknown'}
+              </span>
+            </div>
+            
+            {owner.trustScore && (
+              <TrustScoreBadge score={owner.trustScore.trustScore} size="sm" />
+            )}
+          </div>
+        )}
         
         <div className="mt-4 flex flex-wrap gap-2">
           {isAuthenticated ? (

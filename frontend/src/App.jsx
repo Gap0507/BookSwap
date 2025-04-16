@@ -12,6 +12,7 @@ import RegisterPage from './pages/RegisterPage';
 import BooksPage from './pages/BooksPage';
 import BookDetailPage from './pages/BookDetailPage';
 import DashboardPage from './pages/DashboardPage';
+import ProfilePage from './pages/ProfilePage';
 import NotFound from './pages/NotFound';
 
 function App() {
@@ -49,6 +50,7 @@ function App() {
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/books" element={<BooksPage />} />
                 <Route path="/books/:id" element={<BookDetailPage />} />
+                <Route path="/profile/:userId" element={<ProfilePage />} />
                 <Route path="/dashboard" element={
                   <PrivateRoute>
                     <DashboardPage />

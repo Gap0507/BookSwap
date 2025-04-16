@@ -78,6 +78,38 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
   };
 
+  const refreshTrustScore = async () => {
+    if (!currentUser || !token) return null;
+    
+    try {
+      const data = await authAPI.getProfile();
+      if (data.success) {
+        setCurrentUser(data.user);
+        return data.user.trustScore;
+      }
+      return null;
+    } catch (error) {
+      console.error('Failed to refresh trust score:', error);
+      return null;
+    }
+  };
+
+  const updateProfile = async (userData) => {
+    if (!currentUser || !token) return { success: false, message: 'Not authenticated' };
+    
+    try {
+      const data = await authAPI.updateProfile(userData);
+      if (data.success) {
+        setCurrentUser(data.user);
+        return { success: true, user: data.user };
+      }
+      return { success: false, message: data.message || 'Update failed' };
+    } catch (error) {
+      console.error('Profile update error:', error);
+      return { success: false, message: error.message };
+    }
+  };
+
   const value = {
     currentUser,
     login,
@@ -87,6 +119,9 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: !!currentUser,
     isOwner: currentUser?.role === 'owner',
     isSeeker: currentUser?.role === 'seeker',
+    trustScore: currentUser?.trustScore || 0,
+    refreshTrustScore,
+    updateProfile
   };
 
   return (

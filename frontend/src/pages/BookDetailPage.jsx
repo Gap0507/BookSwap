@@ -231,17 +231,41 @@ const BookDetailPage = () => {
               
               {owner ? (
                 <div className="bg-gray-50 dark:bg-dark-300 rounded-lg p-4">
-                  <div className="flex items-center mb-4">
-                    <div className="h-10 w-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-primary-700 dark:text-primary-300 mr-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                      </svg>
+                  {/* Updated owner information with profile link and trust score */}
+                  {owner._id && (
+                    <div className="flex items-center justify-between mb-4">
+                      <Link to={`/profile/${owner._id}`} className="flex items-center group">
+                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-bold mr-3">
+                          {owner.name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-medium group-hover:text-primary-500 transition-colors">{owner.name}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Book Owner</p>
+                        </div>
+                      </Link>
+                      
+                      {owner.trustScore && (
+                        <div className="flex items-center">
+                          <TrustScoreBadge score={owner.trustScore.trustScore} size="md" />
+                        </div>
+                      )}
                     </div>
-                    <div>
-                      <p className="font-medium">{owner.name}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Book Owner</p>
+                  )}
+                  
+                  {/* If no owner ID available, fallback to the previous display */}
+                  {!owner._id && (
+                    <div className="flex items-center mb-4">
+                      <div className="h-10 w-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-primary-700 dark:text-primary-300 mr-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="font-medium">{owner.name}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Book Owner</p>
+                      </div>
                     </div>
-                  </div>
+                  )}
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-center">

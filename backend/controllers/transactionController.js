@@ -7,7 +7,7 @@ const createTransaction = async (req, res) => {
   try {
     const { bookId, message } = req.body;
     
-    // Find the book
+    // Find the book - using bookId directly
     const book = await Book.findById(bookId);
     
     if (!book) {
@@ -103,6 +103,8 @@ const getTransactionById = async (req, res) => {
   }
 };
 
+
+
 // @desc    Update transaction status
 // @route   PATCH /api/transactions/:id/status
 // @access  Private
@@ -110,60 +112,95 @@ const updateTransactionStatus = async (req, res) => {
   try {
     const { status } = req.body;
     
-    if (!status || !['approved', 'rejected', 'active', 'completed', 'cancelled'].includes(status)) {
-      return res.status(400).json({ success: false, message: 'Invalid status value' });
+    if (!['requested', 'approved', 'rejected', 'active', 'completed', 'cancelled'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status' });
     }
     
-    const transaction = await Transaction.findById(req.params.id)
-      .populate('bookId');
-      
+    // Find the transaction
+    const transaction = await Transaction.findById(req.params.id);
+    
     if (!transaction) {
       return res.status(404).json({ success: false, message: 'Transaction not found' });
     }
     
-    // Security checks
+    // Check if user is part of the transaction
     const isOwner = transaction.ownerId.toString() === req.user.id;
     const isBorrower = transaction.borrowerId.toString() === req.user.id;
     
-    // Only owner can approve, reject or mark as active
-    if ((status === 'approved' || status === 'rejected' || status === 'active') && !isOwner) {
-      return res.status(403).json({ success: false, message: 'Only the book owner can perform this action' });
+    if (!isOwner && !isBorrower) {
+      return res.status(403).json({ success: false, message: 'You are not authorized to update this transaction' });
     }
     
-    // Only borrower can cancel a request
+    // Validate status transitions
+    const validTransitions = {
+      requested: ['approved', 'rejected', 'cancelled'],
+      approved: ['active', 'cancelled', 'rejected'],
+      active: ['completed', 'cancelled'],
+      completed: [],
+      rejected: [],
+      cancelled: []
+    };
+    
+    if (!validTransitions[transaction.status].includes(status)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Cannot transition from ${transaction.status} to ${status}` 
+      });
+    }
+    
+    // Additional validation based on user role
+    if ((status === 'rejected' || status === 'approved' || status === 'active') && !isOwner) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Only the book owner can perform this action' 
+      });
+    }
+    
     if (status === 'cancelled' && !isBorrower) {
-      return res.status(403).json({ success: false, message: 'Only the borrower can cancel the request' });
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Only the borrower can cancel the request' 
+      });
     }
     
-    // Only owner can mark as completed
-    if (status === 'completed' && !isOwner) {
-      return res.status(403).json({ success: false, message: 'Only the book owner can mark as completed' });
-    }
-    
-    // Update book status if transaction is approved, active or completed
-    if (status === 'approved' || status === 'active') {
-      await Book.findByIdAndUpdate(transaction.bookId._id, { status: 'rented' });
-    } else if (status === 'rejected' || status === 'cancelled' || status === 'completed') {
-      await Book.findByIdAndUpdate(transaction.bookId._id, { status: 'available' });
-    }
-    
-    // Update transaction
+    // Update transaction status
     transaction.status = status;
+    
+    // Set start/end dates for active and completed transactions
     if (status === 'active') {
       transaction.startDate = new Date();
-    }
-    if (status === 'completed') {
+    } else if (status === 'completed') {
       transaction.endDate = new Date();
     }
     
     await transaction.save();
     
-    res.json({ success: true, transaction });
+    // Update book status based on transaction status
+    const book = await Book.findById(transaction.bookId);
+    
+    if (book) {
+      if (status === 'active') {
+        book.status = 'rented';
+      } else if (status === 'completed' || status === 'cancelled' || status === 'rejected') {
+        book.status = 'available';
+      }
+      
+      await book.save();
+    }
+    
+    // Populate the transaction data
+    const updatedTransaction = await Transaction.findById(transaction._id)
+      .populate('bookId')
+      .populate('ownerId', 'name email mobile')
+      .populate('borrowerId', 'name email mobile');
+    
+    res.json({ success: true, transaction: updatedTransaction });
   } catch (error) {
     console.error('Update transaction status error:', error);
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
+
 
 module.exports = {
   createTransaction,

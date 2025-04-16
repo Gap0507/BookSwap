@@ -79,7 +79,28 @@ export const authAPI = {
     }),
   
   getProfile: () => 
-    apiRequest('/auth/profile')
+    apiRequest('/auth/profile'),
+    
+  getUserById: (userId) =>
+    apiRequest(`/auth/users/${userId}`),
+    
+  updateProfile: (userData) =>
+    apiRequest('/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(userData)
+    }),
+    
+  rateUser: (userId, ratingData) =>
+    apiRequest(`/auth/users/${userId}/rate`, {
+      method: 'POST',
+      body: JSON.stringify(ratingData)
+    }),
+
+    checkRating: (userId, transactionId) =>
+      apiRequest(`/auth/users/${userId}/ratings/check`, {
+        method: 'POST',
+        body: JSON.stringify({ transactionId })
+      })
 };
 
 // Books API endpoints
@@ -189,4 +210,4 @@ export const transactionsAPI = {
       method: 'PATCH',
       body: JSON.stringify({ status })
     })
-}; 
+};

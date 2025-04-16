@@ -225,3 +225,25 @@
   --toast-success: #22c55e;
   --toast-error: #ef4444;
 }
+
+@keyframes scoreProgress {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: var(--score-width);
+  }
+}
+
+.score-progress {
+  animation: scoreProgress 1.5s ease-out forwards;
+}
+
+.trust-score-badge {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.trust-score-badge:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.5);
+}
